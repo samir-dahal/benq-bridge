@@ -358,7 +358,7 @@ static (string Token, bool IsNew) ResolveToken(string[] argv)
         var saved = ReadToken(path);
         if (saved is not null) return (saved, false);
 
-        // 0.1.0 kept the token next to the exe. Carry it over so paired phones stay paired.
+        // An early test build kept the token next to the exe. Carry it over so paired phones stay paired.
         var legacy = ReadToken(Path.Combine(AppContext.BaseDirectory, "token.txt"));
         if (legacy is not null)
         {
