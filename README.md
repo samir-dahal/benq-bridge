@@ -78,7 +78,7 @@ dotnet run
 | `--port 5080` | `BENQ_BRIDGE_PORT` | `5080` |
 | `--token abc` | `BENQ_BRIDGE_TOKEN` | generated, saved to `token.txt` |
 
-### Publish a single exe
+## Publish a single exe
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained true `
@@ -88,9 +88,6 @@ dotnet publish -c Release -r win-x64 --self-contained true `
 ```
 
 The output is `BenqBridge.exe` plus a `wwwroot` folder; ship both together.
-
-
-Output lands in `bin\Release\net10.0\win-x64\publish\`.
 
 To start with Windows, put a shortcut to the exe in
 `shell:startup`. The window must stay open (it is the server).
