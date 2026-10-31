@@ -9,6 +9,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - New `--pair` and `--no-browser` options.
 - `scripts/release.ps1` builds the release from a clean clone and verifies the zip contents.
 - Adds one dependency, QRCoder (MIT), to draw the QR code.
+- No more console window: the app runs from a tray icon with Pair a phone, Open controls, Start with Windows and Quit.
+- Start with Windows, from the tray menu, the pairing page or `--install` / `--uninstall`. It uses the per-user startup list, so no admin rights are needed and the app runs in your desktop session, which monitor control requires.
+- Launching the exe again while it runs opens the pairing page instead of starting a second server. `--stop` asks the running copy to quit.
+- The token now lives in `%LOCALAPPDATA%\BenqBridge`, so it survives a read-only install folder, an update or a re-extracted zip. A 0.1.0 `token.txt` next to the exe is carried over, so paired phones stay paired.
 
 ## 0.1.0
 

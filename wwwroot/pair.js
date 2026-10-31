@@ -30,6 +30,48 @@ function showMessage(text) {
   content.appendChild(el('div', 'empty', text));
 }
 
+/** Switch for "Start with Windows". Hidden when this build cannot register itself. */
+function startupRow() {
+  const row = el('label', 'startup');
+  row.hidden = true;
+
+  const text = el('span', null, 'Start with Windows');
+  text.appendChild(el('small', null, 'Runs quietly in the tray when you sign in, so your phone keeps working after a restart.'));
+  row.appendChild(text);
+
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  row.appendChild(box);
+
+  fetch('/api/autostart')
+    .then((response) => response.json())
+    .then((state) => {
+      row.hidden = !state.available;
+      box.checked = state.enabled;
+    })
+    .catch(() => { /* leave it hidden */ });
+
+  box.addEventListener('change', async () => {
+    const wanted = box.checked;
+    box.disabled = true;
+    try {
+      const response = await fetch('/api/autostart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: wanted })
+      });
+      if (!response.ok) throw new Error('failed');
+      box.checked = (await response.json()).enabled;
+    } catch {
+      box.checked = !wanted;
+    } finally {
+      box.disabled = false;
+    }
+  });
+
+  return row;
+}
+
 async function load() {
   let data;
   try {
@@ -58,6 +100,8 @@ async function load() {
   open.href = '/#t=' + encodeURIComponent(data.token);
   actions.appendChild(open);
   content.appendChild(actions);
+
+  content.appendChild(startupRow());
 
   if (others.length) {
     const fold = el('details', 'fold others');

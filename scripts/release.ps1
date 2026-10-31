@@ -110,10 +110,15 @@ try {
 
     # --- 4. secret scan ------------------------------------------------------------------
 
+    $tokenFiles = @(Get-ChildItem $repo -Recurse -Filter token.txt -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -notmatch '[\\/]\.git[\\/]' })
+
+    # The app keeps its real token in the per-user data folder.
+    $dataToken = Join-Path $env:LOCALAPPDATA 'BenqBridge\token.txt'
+    if (Test-Path $dataToken) { $tokenFiles += Get-Item $dataToken }
+
     $secrets = @()
-    $secrets += Get-ChildItem $repo -Recurse -Filter token.txt -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '[\\/]\.git[\\/]' } |
-        ForEach-Object { (Get-Content $_.FullName -Raw).Trim() }
+    $secrets += $tokenFiles | ForEach-Object { (Get-Content $_.FullName -Raw).Trim() }
     if ($env:BENQ_BRIDGE_TOKEN) { $secrets += $env:BENQ_BRIDGE_TOKEN.Trim() }
     $secrets = @($secrets | Where-Object { $_ -and $_.Length -ge 6 } | Select-Object -Unique)
 
