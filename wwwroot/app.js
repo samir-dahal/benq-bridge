@@ -8,6 +8,15 @@ const toastEl = $('#toast');
 const tokenModal = $('#tokenModal');
 
 let TOKEN = localStorage.getItem('benq.token') || '';
+
+// The pairing QR code opens "/#t=<token>". Store it, then drop it from the address bar so it
+// does not linger in history or screenshots. A fragment never reaches the server.
+const pairedToken = new URLSearchParams(location.hash.slice(1)).get('t');
+if (pairedToken) {
+  TOKEN = pairedToken;
+  localStorage.setItem('benq.token', pairedToken);
+  history.replaceState(null, '', location.pathname + location.search);
+}
 let monitors = [];
 let currentId = localStorage.getItem('benq.monitor') || null;
 let ws = null;

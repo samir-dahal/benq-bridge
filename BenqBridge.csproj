@@ -8,6 +8,13 @@
     <RootNamespace>BenqBridge</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- The Web SDK ships every project file as content. Keep internal folders out of any
+         build or publish, even one run from this working folder instead of a clean clone. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);private-artifacts\**;ai\**;dist\**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.8.1" />
+  </ItemGroup>
 
 </Project>

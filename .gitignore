@@ -1,4 +1,5 @@
-# AI conversation exports
+# Internal files: AI conversation exports and other private material. Never commit or ship.
+private-artifacts/
 ai/
 
 # .NET build output
@@ -8,6 +9,9 @@ obj/
 # IDE
 .vs/
 *.user
+
+# Release output
+dist/
 
 # Local pairing token written next to the executable
 token.txt

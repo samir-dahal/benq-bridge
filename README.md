@@ -49,8 +49,23 @@ hidden.
 3. Windows may show a SmartScreen warning because the exe is not code-signed. Choose
    **More info**, then **Run anyway**. Allow it through Windows Firewall on private
    networks when asked, otherwise your phone cannot reach it.
+4. On the first run your browser opens a **Pair your phone** page with a QR code. Scan it
+   with your phone's camera. The phone opens the controls already signed in, so there is
+   no token to type.
 
-At startup it prints the LAN URLs and an access token:
+The phone has to be on the same Wi-Fi as the PC. To pair another phone later, open
+`http://localhost:5080/pair.html` on the PC, or start the exe with `--pair`.
+
+### The token
+
+Every request needs an access token, because the app can change your monitor's settings
+and anyone on your network could otherwise do the same. The QR code carries the token in
+the link's fragment (`#t=...`), which the browser never sends to the server, and the
+page removes it from the address bar after saving it. The token is generated on the
+first run and saved to `token.txt` next to the exe.
+
+If the browser does not open (for example on a locked-down PC), the console prints the
+same details:
 
 ```
   BenQ Bridge 0.1.0
@@ -59,9 +74,10 @@ At startup it prints the LAN URLs and an access token:
   http://192.168.1.42:5080/
   token: your-token-here
   ----------------------------------------------
+  Pair a phone: http://localhost:5080/pair.html
 ```
 
-Open the LAN URL on your phone, paste the token once, and it is remembered.
+You can also open a LAN URL on your phone by hand and enter the token once.
 
 ## Run from source
 
@@ -77,17 +93,20 @@ dotnet run
 |---|---|---|
 | `--port 5080` | `BENQ_BRIDGE_PORT` | `5080` |
 | `--token abc` | `BENQ_BRIDGE_TOKEN` | generated, saved to `token.txt` |
+| `--pair` | | open the pairing page on start (it opens by itself only on first run) |
+| `--no-browser` | `BENQ_BRIDGE_NO_BROWSER=1` | never open a browser |
 
-## Publish a single exe
+## Build a release
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
-  -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none `
-  -o publish
+.\scriptselease.ps1
 ```
 
-The output is `BenqBridge.exe` plus a `wwwroot` folder; ship both together.
+The script builds from a fresh clone of the last commit, never from your working folder,
+so internal files such as `private-artifacts/` and `token.txt` cannot end up in the zip.
+It then checks that the output holds only `BenqBridge.exe` and web assets, scans it for
+any pairing token found on your machine, and writes `dist\BenqBridge-win-x64.zip` with its
+SHA-256. It uploads nothing; it prints the `gh release create` command for you to run.
 
 To start with Windows, put a shortcut to the exe in
 `shell:startup`. The window must stay open (it is the server).

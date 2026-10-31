@@ -2,6 +2,14 @@
 
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+- Pair a phone by scanning a QR code. The first run opens a pairing page in the browser; the token travels in the link fragment and is removed from the address bar once stored.
+- Sliders only respond to a touch that grabs the handle, so scrolling the page no longer changes brightness or other settings.
+- New `--pair` and `--no-browser` options.
+- `scripts/release.ps1` builds the release from a clean clone and verifies the zip contents.
+- Adds one dependency, QRCoder (MIT), to draw the QR code.
+
 ## 0.1.0
 
 First release.

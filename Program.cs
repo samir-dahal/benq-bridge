@@ -49,13 +49,27 @@ var json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
 };
 
-var token = ResolveToken(args);
+var (token, tokenIsNew) = ResolveToken(args);
 var registry = app.Services.GetRequiredService<MonitorRegistry>();
 var hub = app.Services.GetRequiredService<WsHub>();
 
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
+
+    // Pairing hands out the token, so it is for the PC itself only and needs no token.
+    if (path.StartsWithSegments("/api/pair"))
+    {
+        if (!Pairing.IsLocalRequest(context))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await next();
+        return;
+    }
+
     if (path.StartsWithSegments("/api") || path.StartsWithSegments("/ws"))
     {
         var supplied = context.Request.Headers["X-Api-Token"].FirstOrDefault()
@@ -85,6 +99,8 @@ app.MapGet("/api/health", () => new
     monitors = registry.Devices.Count(d => d.IsSupported),
     pollIntervalMs = registry.PollIntervalMs
 });
+
+app.MapGet("/api/pair", () => new { token, addresses = Pairing.Build(port, token) });
 
 app.MapGet("/api/monitors", () => registry.Snapshot());
 
@@ -220,13 +236,24 @@ app.Lifetime.ApplicationStarted.Register(() =>
 {
     registry.Start();
 
+    var pairUrl = $"http://localhost:{port}/pair.html";
+
     Console.WriteLine();
     Console.WriteLine($"  BenQ Bridge {BuildInfo.Version}");
     Console.WriteLine("  ----------------------------------------------");
     foreach (var url in LanUrls(port)) Console.WriteLine($"  {url}");
     Console.WriteLine($"  token: {token}");
     Console.WriteLine("  ----------------------------------------------");
+    Console.WriteLine($"  Pair a phone: {pairUrl}");
     Console.WriteLine();
+
+    // First run shows the QR code without being asked. After that it stays out of the way,
+    // so a start-with-Windows entry does not open a browser on every boot.
+    var wantPairPage = tokenIsNew || args.Contains("--pair");
+    var suppressed = args.Contains("--no-browser")
+                     || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BENQ_BRIDGE_NO_BROWSER"));
+
+    if (wantPairPage && !suppressed) TryOpenBrowser(pairUrl);
 });
 
 app.Lifetime.ApplicationStopped.Register(() => registry.DisposeAsync().AsTask().GetAwaiter().GetResult());
@@ -260,10 +287,23 @@ static string? GetOption(string[] argv, string name)
     return null;
 }
 
-static string ResolveToken(string[] argv)
+static void TryOpenBrowser(string url)
+{
+    try
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+    }
+    catch
+    {
+        // Headless or locked-down machine: the console already printed the address.
+    }
+}
+
+/// <summary>Returns the token and whether it was generated on this run (a first-time setup).</summary>
+static (string Token, bool IsNew) ResolveToken(string[] argv)
 {
     var explicitToken = GetOption(argv, "--token") ?? Environment.GetEnvironmentVariable("BENQ_BRIDGE_TOKEN");
-    if (!string.IsNullOrWhiteSpace(explicitToken)) return explicitToken.Trim();
+    if (!string.IsNullOrWhiteSpace(explicitToken)) return (explicitToken.Trim(), false);
 
     var path = Path.Combine(AppContext.BaseDirectory, "token.txt");
     try
@@ -271,16 +311,16 @@ static string ResolveToken(string[] argv)
         if (File.Exists(path))
         {
             var saved = File.ReadAllText(path).Trim();
-            if (saved.Length > 0) return saved;
+            if (saved.Length > 0) return (saved, false);
         }
 
         var generated = Convert.ToHexString(RandomNumberGenerator.GetBytes(8)).ToLowerInvariant();
         File.WriteAllText(path, generated);
-        return generated;
+        return (generated, true);
     }
     catch
     {
-        return Convert.ToHexString(RandomNumberGenerator.GetBytes(8)).ToLowerInvariant();
+        return (Convert.ToHexString(RandomNumberGenerator.GetBytes(8)).ToLowerInvariant(), true);
     }
 }
 
@@ -294,29 +334,8 @@ static bool TokenEquals(string? supplied, string expected)
 
 static IEnumerable<string> LanUrls(int port)
 {
-    var urls = new List<string> { $"http://localhost:{port}/" };
-
-    try
-    {
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            if (nic.OperationalStatus != OperationalStatus.Up) continue;
-            if (nic.NetworkInterfaceType is NetworkInterfaceType.Loopback) continue;
-
-            foreach (var address in nic.GetIPProperties().UnicastAddresses)
-            {
-                if (address.Address.AddressFamily != AddressFamily.InterNetwork) continue;
-                if (IPAddress.IsLoopback(address.Address)) continue;
-                urls.Add($"http://{address.Address}:{port}/");
-            }
-        }
-    }
-    catch
-    {
-        // best effort only
-    }
-
-    return urls;
+    yield return $"http://localhost:{port}/";
+    foreach (var address in Pairing.FindLanAddresses()) yield return $"http://{address.Ip}:{port}/";
 }
 
 internal sealed record VcpWriteRequest(uint Value);
