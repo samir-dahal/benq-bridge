@@ -36,15 +36,19 @@ hidden.
 ## Requirements
 
 - Windows 10/11
-- .NET 10 SDK (to build) or the published self-contained exe (to run)
 - DDC/CI enabled in the monitor's OSD (on by default for BenQ)
+- To run the release: nothing else. It bundles the .NET runtime, so you do not need
+  to install .NET.
+- To build from source: the .NET 10 SDK
 
-## Run it
+## Download and run
 
-```powershell
-cd E:\Repos\Personal\AI\benq-bridge
-dotnet run
-```
+1. Download `BenqBridge-win-x64.zip` from the
+   [latest release](https://github.com/samir-dahal/benq-bridge/releases/latest) and unzip it.
+2. Run `BenqBridge.exe`. Keep the `wwwroot` folder next to it.
+3. Windows may show a SmartScreen warning because the exe is not code-signed. Choose
+   **More info**, then **Run anyway**. Allow it through Windows Firewall on private
+   networks when asked, otherwise your phone cannot reach it.
 
 At startup it prints the LAN URLs and an access token:
 
@@ -59,7 +63,15 @@ At startup it prints the LAN URLs and an access token:
 
 Open the LAN URL on your phone, paste the token once, and it is remembered.
 
-### Options
+## Run from source
+
+```powershell
+git clone https://github.com/samir-dahal/benq-bridge
+cd benq-bridge
+dotnet run
+```
+
+## Options
 
 | Argument | Env var | Default |
 |---|---|---|
@@ -70,8 +82,13 @@ Open the LAN URL on your phone, paste the token once, and it is remembered.
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none `
+  -o publish
 ```
+
+The output is `BenqBridge.exe` plus a `wwwroot` folder; ship both together.
+
 
 Output lands in `bin\Release\net10.0\win-x64\publish\`.
 
