@@ -1,0 +1,13 @@
+# AI conversation exports
+ai/
+
+# .NET build output
+bin/
+obj/
+
+# IDE
+.vs/
+*.user
+
+# Local pairing token written next to the executable
+token.txt

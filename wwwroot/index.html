@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1211" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f4f2" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BenQ Bridge</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="dot" id="connDot" title="connection"></span>
+    <span class="brand-name">BenQ Bridge</span>
+  </div>
+  <button class="icon-btn" id="btnRefresh" title="Re-read monitor" aria-label="Re-read monitor">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 11a8 8 0 0 0-14.3-4.6L4 8"/><path d="M4 4v4h4"/>
+      <path d="M4 13a8 8 0 0 0 14.3 4.6L20 16"/><path d="M20 20v-4h-4"/>
+    </svg>
+  </button>
+</header>
+
+<nav class="monitors" id="monitorChips"></nav>
+
+<main id="content">
+  <div class="placeholder">Loading…</div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="tokenModal" role="dialog" aria-modal="true" aria-labelledby="tokenTitle" hidden>
+  <div class="modal-card">
+    <h2 id="tokenTitle">Pair this device</h2>
+    <p>Enter the token printed in the BenQ Bridge console window.</p>
+    <input id="tokenInput" type="text" inputmode="latin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="token">
+    <div class="modal-actions">
+      <button class="primary" id="tokenSave">Connect</button>
+    </div>
+    <p class="hint" id="tokenHint"></p>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
