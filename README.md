@@ -8,6 +8,10 @@ Built by reverse engineering BenQ Eye-CareU, which turns out to be doing exactly
 the same thing internally (`GetPhysicalMonitorsFromHMONITOR`, `GetVCPFeatureAndVCPFeatureReply`,
 `SetVCPFeature`) but exposes only a curated subset of what the panel supports.
 
+<p align="center">
+  <img src="docs/screenshot-mobile.jpg" alt="BenQ Bridge on a phone: brightness slider, input source, picture mode and low blue light for a BenQ GW2490" width="320">
+</p>
+
 ## What it can do
 
 Anything your monitor advertises in its MCCS capability string. On a BenQ GW2490
