@@ -316,6 +316,15 @@ function paintFill(input) {
   input.style.setProperty('--pct', (Number(input.value) / max * 100) + '%');
 }
 
+/** True when a touch at clientX lands on the slider handle (with some room for a fat finger). */
+function isOnHandle(input, clientX) {
+  const handle = input.closest('.hero-card') ? 36 : 28;
+  const rect = input.getBoundingClientRect();
+  const max = Number(input.max) || 100;
+  const centre = rect.left + handle / 2 + (Number(input.value) / max) * (rect.width - handle);
+  return Math.abs(clientX - centre) <= handle / 2 + 14;
+}
+
 function makeContinuous(feature, big = false) {
   const code = feature.code;
   const card = el('div', big ? 'card hero-card' : 'card');
@@ -337,16 +346,37 @@ function makeContinuous(feature, big = false) {
   paintFill(input);
   card.appendChild(input);
 
-  input.addEventListener('pointerdown', () => activeCodes.add(code));
-  input.addEventListener('pointerup', () => { activeCodes.delete(code); queueWrite(code, Number(input.value)); });
-  input.addEventListener('pointercancel', () => { activeCodes.delete(code); queueWrite(code, Number(input.value)); });
+  // Scroll swipes often start on a slider. A touch only counts if it grabs the handle;
+  // anywhere else on the track the page scrolls and the value snaps back untouched.
+  let accepted = Number(input.value);
+  let grabbed = true;
+
+  const release = () => {
+    activeCodes.delete(code);
+    grabbed = true;
+  };
+
+  input.addEventListener('pointerdown', (event) => {
+    grabbed = event.pointerType !== 'touch' || isOnHandle(input, event.clientX);
+    if (grabbed) activeCodes.add(code);
+  });
+  input.addEventListener('pointerup', release);
+  input.addEventListener('pointercancel', release);
+  input.addEventListener('change', release);
+
   input.addEventListener('input', () => {
+    if (!grabbed) {
+      input.value = String(accepted);
+      paintFill(input);
+      return;
+    }
+
+    accepted = Number(input.value);
     activeCodes.add(code);
     paintFill(input);
-    updateContinuousLabel(valueEl, feature, Number(input.value));
-    queueWrite(code, Number(input.value));
+    updateContinuousLabel(valueEl, feature, accepted);
+    queueWrite(code, accepted);
   });
-  input.addEventListener('change', () => { activeCodes.delete(code); queueWrite(code, Number(input.value)); });
 
   nodes.set(code, {
     feature,
@@ -355,6 +385,7 @@ function makeContinuous(feature, big = false) {
       if (activeCodes.has(code)) return;
       input.max = String(f.max > 0 ? f.max : input.max);
       if (f.value !== null && f.value !== undefined) input.value = String(f.value);
+      accepted = Number(input.value);
       paintFill(input);
     }
   });
