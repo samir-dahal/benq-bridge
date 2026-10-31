@@ -135,6 +135,7 @@ try {
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
     Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zip = [IO.Compression.ZipFile]::Open($zipPath, 'Create')
     try {
         foreach ($file in $files | Sort-Object FullName) {
