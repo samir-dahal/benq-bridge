@@ -8,7 +8,17 @@ using System.Text.Json;
 using BenqBridge;
 using BenqBridge.Ddc;
 
-var builder = WebApplication.CreateBuilder(args);
+// A published build keeps wwwroot next to the exe. Anchor there so a shortcut or a
+// start-with-Windows entry still finds it; `dotnet run` keeps the project folder.
+var contentRoot = Directory.Exists(Path.Combine(AppContext.BaseDirectory, "wwwroot"))
+    ? AppContext.BaseDirectory
+    : Directory.GetCurrentDirectory();
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = contentRoot
+});
 
 builder.Logging.ClearProviders();
 builder.Logging.AddSimpleConsole(o =>
